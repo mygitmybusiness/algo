@@ -5,7 +5,8 @@
  * @return {number[]}
  */
 var calcEquation = function (equations, values, queries) {
-
+    // b/a == 1/2, c/b == 1/3
+    // a/c == a/b * b/c == 2 * 3 == 6
     // Step 1: Build the graph
     let graph = {};
 
