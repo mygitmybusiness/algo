@@ -1,6 +1,6 @@
 const matrixBFS = (matrix, startRow = 0, startCol = 0) => {
-    let rows = grid.length;
-    let cols = grid[0].length;
+    let rows = matrix.length;
+    let cols = matrix[0].length;
 
     const visited = Array.from({ length: rows }, () => Array(cols).fill(false));
     visited[startRow][startCol] = true;
