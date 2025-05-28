@@ -1,80 +1,183 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <title>Donut JS</title>
     <style>
         body {
-            background-color: black;
+            background: radial-gradient(#1f1f1f, #000);
             color: white;
             font-family: monospace;
             white-space: pre;
-            font-size: 12px;
+            font-size: 16px;
         }
+
+        .donut-wrapper {
+            height: 100vh;
+            margin: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
         #donut {
-            line-height: 10px;
+            font-family: monospace;
+            line-height: 90%;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        @keyframes animate {
+            0%,
+            100% {
+                top: -7px;
+                left: 0;
+                opacity: 1;
+            }
+
+            20% {
+                top: 0;
+                left: -10px;
+                opacity: 0.7;
+            }
+
+            40% {
+                top: 7px;
+                left: 0;
+                opacity: 0.2;
+            }
+
+            60% {
+                top: 0;
+                left: 10px;
+                opacity: 0.3;
+            }
+
+            80% {
+                top: 0;
+                left: 0;
+                opacity: 0.9;
+            }
         }
     </style>
 </head>
+
 <body>
-    <div id="donut"></div>
+    <div class="donut-wrapper">
+        <div id="donut"></div>
+    </div>
 
     <script>
+        // Углы поворота (вращения) тора
         let A = 0, B = 0;
-        let size = parseInt(prompt("Enter size (1-10): ", "5"));
-        let colorInput = prompt("Enter color (e.g., red, green, blue): ", "white");
 
-        const R1 = 1;
-        let R2 = 2 + (size - 5) * 0.2;
-        const K2 = 5;
-        const K1 = 10 / (R1 + R2);
+        // Размер тора (влияет на внешний радиус)
+        let size = 1;
 
-        const screenWidth = 80;
-        const screenHeight = 22;
+        // Цвет ASCII-символов для HTML
+        let colorInput = "white";
 
-        const b = new Array(1760).fill(' ');
-        const z = new Array(1760).fill(0);
+        // Радиусы тора
+        const R1 = 1; // внутренний радиус трубки
+        let R2 = 1 + (size - 5) * 0.5; // внешний радиус тора
 
+        // Константы для проекций
+        const K2 = 5; // сдвиг вдаль (от камеры)
+        const K1 = 10 / (R1 + R2); // масштабный коэффициент
+
+        // Размеры ASCII "экрана"
+        const screenWidth = 64;
+        const screenHeight = 42;
+
+        // Буферы: символов (b) и глубины (z)
+        const b = new Array(screenWidth * screenHeight).fill(' ');
+        const z = new Array(screenWidth * screenHeight).fill(0);
+
+        // Элемент, куда будет вставлен ASCII-донат
         const donutElement = document.getElementById("donut");
 
-        function renderFrame() {
+        // Настройка частоты кадров (FPS)
+        const targetFPS = 300; // максимальная частота кадров
+        const frameInterval = 100 / targetFPS; // интервал между кадрами в мс
+        let lastFrameTime = 0; // время последнего отрисованного кадра
+
+        // Основная функция рендеринга одного кадра
+        function renderFrame(currentTime) {
+            // Если с предыдущего кадра прошло меньше, чем нужно — пропускаем
+            if (currentTime - lastFrameTime < frameInterval) {
+                requestAnimationFrame(renderFrame);
+                return;
+            }
+
+            // Обновляем метку времени
+            lastFrameTime = currentTime;
+
+            // Очищаем буферы перед отрисовкой нового кадра
             b.fill(' ');
             z.fill(0);
 
-            for (let j = 0; j < 6.28; j += 0.07) {
-                for (let i = 0; i < 6.28; i += 0.02) {
-                    const c = Math.sin(i), d = Math.cos(j), e = Math.sin(A), f = Math.sin(j),
-                          g = Math.cos(A), h = d + 2, D = 1 / (c * h * e + f * g + 5),
-                          l = Math.cos(i), m = Math.cos(B), n = Math.sin(B),
-                          t = c * h * g - f * e;
+            // Два вложенных цикла по углам тора
+            for (let j = 0; j < 6.28; j += 0.1) {       // внешний круг тора
+                for (let i = 0; i < 6.28; i += 0.02) {   // круг трубки
 
-                    const x = Math.floor(40 + 30 * D * (l * h * m - t * n));
-                    const y = Math.floor(12 + 15 * D * (l * h * n + t * m));
+                    // Тригонометрические значения для точек на торе
+                    const c = Math.sin(i);
+                    const l = Math.cos(i);
+                    const d = Math.cos(j);
+                    const f = Math.sin(j);
+
+                    // Углы вращения
+                    const e = Math.sin(A);
+                    const g = Math.cos(A);
+                    const m = Math.cos(B);
+                    const n = Math.sin(B);
+
+                    const h = d + 2.4; // смещение по X
+                    const D = 1 / (c * h * e + f * g + K2); // инвертированная глубина
+                    const t = c * h * g - f * e; // используется в проекции
+
+                    // 2D-координаты на экране
+                    const x = Math.floor(screenWidth / 2 + 30 * D * (l * h * m - t * n));
+                    const y = Math.floor(screenHeight / 2 + 20 * D * (l * h * n + t * m));
+
+                    // Индекс в одномерном буфере (для z-buffer и символов)
                     const o = x + screenWidth * y;
+
+                    // Освещенность точки (влияние нормали и направления света)
                     const N = Math.floor(8 * ((f * e - c * d * g) * m - c * d * e - f * g - l * d * n));
 
+                    // Проверка, в пределах ли экрана и ближе ли точка, чем предыдущая
                     if (y < screenHeight && y >= 0 && x >= 0 && x < screenWidth && D > z[o]) {
-                        z[o] = D;
-                        b[o] = ".,-~:;=!*#$@"[N > 0 ? N : 0];
+                        z[o] = D; // сохраняем глубину
+                        b[o] = ".,-~:;=!*#$@"[N > 0 ? N : 0]; // выбираем символ по освещенности
                     }
                 }
             }
 
+            // Формируем HTML-строку с символами и цветом
             let output = '';
-            for (let k = 0; k < 1760; k++) {
-                output += (k % 80) ? `<span style="color: ${colorInput}">${b[k]}</span>` : '\n';
+            for (let k = 0; k < screenWidth * screenHeight; k++) {
+                output += (k % screenWidth)
+                    ? `<span style="color: ${colorInput}">${b[k]}</span>`
+                    : '\n';
             }
 
+            // Вставляем HTML в элемент
             donutElement.innerHTML = output;
 
-            // SLOWER SPEED:
+            // Изменяем углы для анимации вращения
             A += 0.01;
             B += 0.01;
 
+            // Рекурсивно запускаем следующий кадр
             requestAnimationFrame(renderFrame);
         }
 
-        renderFrame();
+        // Запускаем анимацию
+        requestAnimationFrame(renderFrame);
+
     </script>
 </body>
+
 </html>
