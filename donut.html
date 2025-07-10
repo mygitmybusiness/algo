@@ -24,41 +24,8 @@
         #donut {
             font-family: monospace;
             line-height: 90%;
-            font-size: 12px;
+            font-size: 18px;
             cursor: pointer;
-        }
-
-        @keyframes animate {
-            0%,
-            100% {
-                top: -7px;
-                left: 0;
-                opacity: 1;
-            }
-
-            20% {
-                top: 0;
-                left: -10px;
-                opacity: 0.7;
-            }
-
-            40% {
-                top: 7px;
-                left: 0;
-                opacity: 0.2;
-            }
-
-            60% {
-                top: 0;
-                left: 10px;
-                opacity: 0.3;
-            }
-
-            80% {
-                top: 0;
-                left: 0;
-                opacity: 0.9;
-            }
         }
     </style>
 </head>
@@ -84,7 +51,7 @@
 
         // Константы для проекций
         const K2 = 5; // сдвиг вдаль (от камеры)
-        const K1 = 10 / (R1 + R2); // масштабный коэффициент
+        const K1 = 500 / (R1 + R2); // масштабный коэффициент
 
         // Размеры ASCII "экрана"
         const screenWidth = 64;
@@ -98,8 +65,8 @@
         const donutElement = document.getElementById("donut");
 
         // Настройка частоты кадров (FPS)
-        const targetFPS = 300; // максимальная частота кадров
-        const frameInterval = 100 / targetFPS; // интервал между кадрами в мс
+        const targetFPS = 30; // максимальная частота кадров
+        const frameInterval = 1000 / targetFPS; // интервал между кадрами в мс
         let lastFrameTime = 0; // время последнего отрисованного кадра
 
         // Основная функция рендеринга одного кадра
