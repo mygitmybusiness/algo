@@ -52,7 +52,3 @@ const data = async () => {
 };
 
 data();
-
-
-
-
